@@ -19,9 +19,7 @@ class AppSetting {
   static String selectedLanguageCode = AppUtil().getUserChoosedLanguage();
   static RxBool isInitRemoteConfig = false.obs;
   static bool shouldShowSound = true;
-  static int interval_inter_ad = 20;
   static bool appInBackground = false;
-  static DateTime? lastTimeShowAd;
 
   static initAppSetting() {
     shouldShowSound = AppUtil.getBool("shouldShowSound");
@@ -43,17 +41,9 @@ class AppSetting {
     });
   }
 
-  static bool canShowInterstitialAd() {
-    if (lastTimeShowAd == null) return true;
-    final now = DateTime.now();
-    final difference = now.difference(lastTimeShowAd!).inSeconds;
-    debugPrint("AppSetting: time elapsed since last ad: ${difference}s, interval required: ${interval_inter_ad}s");
-    return difference >= interval_inter_ad;
-  }
 
   static void updateLastTimeShowAd() {
-    lastTimeShowAd = DateTime.now();
-    debugPrint("AppSetting: updated lastTimeShowAd to $lastTimeShowAd");
+    EasyAds.instance.recordInterstitialAdShowTime();
   }
 
   static void showInterstitialAd(
@@ -73,9 +63,8 @@ class AppSetting {
         !AppSetting.isPremiumUser.value &&
         !AppSetting.isRemoveAds.value;
 
-    final bool allowInterval = !checkInterval || canShowInterstitialAd();
 
-    if (showInter && allowInterval && adId.trim().isNotEmpty && adId != "null") {
+    if (showInter && adId.trim().isNotEmpty && adId != "null") {
       EasyAds.instance.showInterstitialAd(
         context,
         adId: adId,
@@ -96,6 +85,37 @@ class AppSetting {
     }
   }
 
+
+  static void showRewardToUnlock(
+    BuildContext context, {
+    required VoidCallback onUnlocked,
+    VoidCallback? onFailed,
+  }) {
+    final String adId = MyAdIdName.rewardedAd.getId;
+    if (adId.trim().isEmpty || adId == "null") {
+      onUnlocked();
+      return;
+    }
+
+    EasyAds.instance.showRewardAd(
+      context,
+      adId: adId,
+      onShowed: () {
+        updateLastTimeShowAd();
+      },
+      adDissmissed: () {
+        updateLastTimeShowAd();
+        Future.delayed(const Duration(milliseconds: 300), onUnlocked);
+      },
+      onFailed: () {
+        if (onFailed != null) {
+          onFailed();
+        } else {
+          AppUtil.showNormalToast("No ads available. Please try again later.".tr);
+        }
+      },
+    );
+  }
 
   static int getFreeUsageCount(String featureId) =>
       AppUtil.getInt('${Constants.kCountFreeUsage}_$featureId');

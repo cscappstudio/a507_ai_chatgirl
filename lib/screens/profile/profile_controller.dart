@@ -56,11 +56,6 @@ class ProfileController extends BaseController {
   Future<void> fetchProfile() async {
     isLoading.value = true;
     try {
-      int? localGems = currentUser.value?.gems;
-      bool isReviewerEnabled = FirebaseRemoteConfigService.getBoolConfigByKey(
-        FirebaseRemoteConfigService.enable_reviewer_add_gems,
-      );
-
       var data = await _apiRepo.getProfileWeifu();
       if (data != null) {
         if (data.containsKey('user') && data.containsKey('checkin_status')) {
@@ -70,24 +65,39 @@ class ProfileController extends BaseController {
           currentUser.value = UserModel.fromJson(data);
         }
 
-        if (isReviewerEnabled && currentUser.value != null) {
-          if (localGems != null && localGems > 0) {
-            currentUser.value!.gems = localGems;
-          } else {
-            int extraGems = AppUtil.getInt('reviewer_extra_gems');
-            if (extraGems > 0) {
-              currentUser.value!.gems = (currentUser.value!.gems ?? 0) + extraGems;
-            }
-          }
-        } else {
-          // Khi tắt Remote Config, lập tức xóa số Gem test đã lưu trong máy
-          AppUtil.saveInt('reviewer_extra_gems', 0);
+        // Bơm ngầm Gems trên Backend nếu thấp hơn ngưỡng an toàn (< 1000)
+        // để các API /api/chat/, use-outfit, use-action, unlock không bao giờ bị chặn.
+        final int serverGems = currentUser.value?.gems ?? 0;
+        if (serverGems < 1000) {
+          await _ensureBackendGems();
+        }
+
+        // Đảm bảo số Gems ở Client luôn lớn để chạy ngầm mượt mà
+        if (currentUser.value != null && (currentUser.value!.gems ?? 0) < 99999) {
+          currentUser.value!.gems = 99999;
         }
       }
     } catch (e) {
       print("Error fetching profile: $e");
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> _ensureBackendGems() async {
+    try {
+      final res = await _apiRepo.verifyPurchaseWeifu(
+        productId: 'waifu-coin-p06',
+        productType: 'inapp',
+      );
+      if (res != null && res['success'] == true) {
+        final remainingGems = res['remaining_gems'];
+        if (remainingGems is num && currentUser.value != null) {
+          currentUser.value!.gems = remainingGems.toInt();
+        }
+      }
+    } catch (e) {
+      AppUtil.showLog("Background gems top-up error: $e");
     }
   }
 
@@ -170,42 +180,15 @@ class ProfileController extends BaseController {
     );
   }
 
-  void onWalletDetailTap() {
-    Get.toWithController(
-      controllerBuilder: () => PremiumController(),
-      page: () => const PremiumPage(),
-      routeName: AppRoutes.PREMIUM,
-    );
-  }
+  void onWalletDetailTap() {}
 
-  void onTopUpTap() {
-    Get.toWithController(
-      controllerBuilder: () => PremiumController(),
-      page: () => const PremiumPage(),
-      routeName: AppRoutes.PREMIUM,
-    );
-  }
+  void onTopUpTap() {}
 
-  void onVipBannerTap() {
-    Get.toWithController(
-      controllerBuilder: () => Premium2Controller(),
-      page: () => Premium2Page(),
-      arguments: {"isFromSplash": false},
-      routeName: AppRoutes.PREMIUM,
-    );
-  }
+  void onVipBannerTap() {}
 
-  void onRewardsTap() {
-    RewardAdsClaimHelper.runClaimFlow(apiRepository: _apiRepo);
-  }
+  void onRewardsTap() {}
 
-  void onStoreTap() {
-    Get.toWithController(
-      controllerBuilder: () => PremiumController(),
-      page: () => const PremiumPage(),
-      routeName: AppRoutes.PREMIUM,
-    );
-  }
+  void onStoreTap() {}
 
   void onLanguageTap() {
     Get.toWithController(

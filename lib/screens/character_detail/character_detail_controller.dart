@@ -196,8 +196,8 @@ class CharacterDetailController extends BaseController {
   }
 
   Future<void> onTapCard(Map<String, dynamic> cardData, int index) async {
+    final imageUrl = (cardData['image_url'] ?? '').toString().replaceAll('localhost:8000', '20.198.254.31:7005');
     if (isCardUnlocked(cardData, index)) {
-      final imageUrl = (cardData['image_url'] ?? '').toString().replaceAll('localhost:8000', '20.198.254.31:7005');
       if (imageUrl.isNotEmpty) {
         Get.toWithController(
           controllerBuilder: () => FullScreenImageController(),
@@ -214,70 +214,42 @@ class CharacterDetailController extends BaseController {
       return;
     }
     if (_unlockingCardIds.contains(cardId)) return;
-    final int priceGems = (cardData['price_gems'] is num) ? (cardData['price_gems'] as num).toInt() : 0;
-    final int currentGems = await _getCurrentGems();
-    if (currentGems < priceGems) {
-      final int shortage = priceGems - currentGems;
-      await Get.dialog(
-        GetBuilder<PopupNotEnoughGemsController>(
-          init: PopupNotEnoughGemsController(
-            title: "Not enough gems".tr,
-            message: "This card needs".tr + "$priceGems" + " gems, you're short".tr + " $shortage" + " gems.\nWatch a reward ad for bonus gems or top up in Premium.".tr,
-            onWatchAdSuccess: () async {
-              if (Get.isRegistered<ProfileController>()) {
-                await Get.find<ProfileController>().fetchProfile();
-              }
-            },
-            onGoPremium: () {
-              Get.toWithController(
-                controllerBuilder: () => PremiumController(),
-                page: () => const PremiumPage(),
-                routeName: AppRoutes.PREMIUM,
-              );
-            },
-          ),
-          builder: (_) => const PopupNotEnoughGemsPage(),
-        ),
-        barrierDismissible: true,
-        useSafeArea: false,
-      );
-      return;
-    }
-    _unlockingCardIds.add(cardId);
-    update();
-    try {
-      final res = await _apiRepo.unlockCharacterCardWeifu(
-        characterId: character.id!,
-        cardId: cardId,
-      );
 
-      bool isReviewerEnabled = FirebaseRemoteConfigService.getBoolConfigByKey(
-        FirebaseRemoteConfigService.enable_reviewer_add_gems,
-      );
+    AppSetting.showRewardToUnlock(
+      Get.context!,
+      onUnlocked: () async {
+        _unlockingCardIds.add(cardId);
+        update();
+        try {
+          unlockedCardIds.add(cardId);
+          _saveUnlockedCardsToLocal();
+          AppUtil.showNormalToast('Card unlocked successfully'.tr);
+          update();
 
-      final isSuccess = res != null || isReviewerEnabled;
+          // Mở khóa ngầm trên Server
+          _apiRepo.unlockCharacterCardWeifu(
+            characterId: character.id!,
+            cardId: cardId,
+          ).then((_) {
+            if (Get.isRegistered<ProfileController>()) {
+              Get.find<ProfileController>().fetchProfile();
+            }
+          });
 
-      if (isSuccess) {
-        unlockedCardIds.add(cardId);
-        _saveUnlockedCardsToLocal();
-        AppUtil.showNormalToast('Card unlocked successfully'.tr);
-        if (Get.isRegistered<ProfileController>()) {
-          if (isReviewerEnabled) {
-            final profile = Get.find<ProfileController>();
-            final currGems = profile.currentUser.value?.gems ?? 0;
-            profile.currentUser.value?.gems = (currGems - priceGems).clamp(0, 9999999);
-            profile.currentUser.refresh();
-          } else {
-            await Get.find<ProfileController>().fetchProfile();
+          if (imageUrl.isNotEmpty) {
+            Get.toWithController(
+              controllerBuilder: () => FullScreenImageController(),
+              page: () => const FullScreenImagePage(),
+              arguments: imageUrl,
+              routeName: AppRoutes.FULL_SCREEN_IMAGE,
+            );
           }
+        } finally {
+          _unlockingCardIds.remove(cardId);
+          update();
         }
-      } else {
-        AppUtil.showNormalToast('Unlock failed. Please try again.'.tr);
-      }
-    } finally {
-      _unlockingCardIds.remove(cardId);
-      update();
-    }
+      },
+    );
   }
 
   void startChat() {

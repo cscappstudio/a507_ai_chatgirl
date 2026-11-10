@@ -94,13 +94,7 @@ class HomeController extends BaseController {
     scrollToTop();
   }
 
-  void onGemsCapsuleTap() {
-    Get.toWithController(
-      controllerBuilder: () => PremiumController(),
-      page: () => const PremiumPage(),
-      routeName: AppRoutes.PREMIUM,
-    );
-  }
+  void onGemsCapsuleTap() {}
 
   @override
   void onInit() {
@@ -125,7 +119,7 @@ class HomeController extends BaseController {
   @override
   void onReady() {
     super.onReady();
-    _showYearlySalePopup();
+    _requestPushNotificationPermission();
   }
 
   void _requestPushNotificationPermission() {

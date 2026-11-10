@@ -75,23 +75,28 @@ class AlbumPage extends GetView<AlbumController> {
           },
         );
       }),
-      bottomNavigationBar: Obx(() {
-        if (AppSetting.isPremiumUser.value || AppSetting.isRemoveAds.value) {
-          return const SizedBox.shrink();
-        }
-        if (!FirebaseRemoteConfigService.getBoolConfigByKey(
-            FirebaseRemoteConfigService.banner_all)) {
-          return const SizedBox.shrink();
-        }
-        return SafeArea(
-          top: false,
-          child: EasyBannerAd(
-            adNetwork: AdNetwork.admob,
-            adId: MyAdIdName.bannerAll.getId,
-            isCollapsible: true,
-          ),
-        );
-      }),
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Obx(() {
+            if (AppSetting.isPremiumUser.value || AppSetting.isRemoveAds.value) {
+              return const SizedBox.shrink();
+            }
+            if (!FirebaseRemoteConfigService.getBoolConfigByKey(
+                FirebaseRemoteConfigService.banner_all)) {
+              return const SizedBox.shrink();
+            }
+            return SafeArea(
+              top: false,
+              child: EasyBannerAd(
+                adNetwork: AdNetwork.admob,
+                adId: MyAdIdName.bannerAll.getId,
+                isCollapsible: true,
+              ),
+            );
+          }),
+        ],
+      ),
     );
   }
 }

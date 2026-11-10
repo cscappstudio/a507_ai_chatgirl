@@ -599,14 +599,14 @@ class CharacterDetailPage extends StatelessWidget {
                           ),
                         ),
 
-                        // Bottom gem price badge
+                        // Bottom watch ad badge
                         Positioned(
                           bottom: 4,
                           left: 0,
                           right: 0,
                           child: Center(
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                               decoration: BoxDecoration(
                                 color: Colors.black.withValues(alpha: 0.75),
                                 borderRadius: BorderRadius.circular(8),
@@ -614,10 +614,14 @@ class CharacterDetailPage extends StatelessWidget {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Image.asset('assets/png/gem.png', width: 9, height: 9),
+                                  const Icon(
+                                    Icons.play_circle_fill_rounded,
+                                    color: Colors.white,
+                                    size: 11,
+                                  ),
                                   const SizedBox(width: 3),
                                   Text(
-                                    "$priceGems",
+                                    "Ad".tr,
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 9.5,

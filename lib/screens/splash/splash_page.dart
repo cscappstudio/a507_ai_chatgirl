@@ -59,7 +59,7 @@ class _SplashPageState extends State<SplashPage> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Image.asset(
-                            "assets/png/splash_thumb.png",
+                            "assets/png/splash_thumb.webp",
                             width: 121,
                             height: 121,
                           ),

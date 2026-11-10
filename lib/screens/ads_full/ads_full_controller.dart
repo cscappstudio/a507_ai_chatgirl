@@ -1,3 +1,5 @@
+import 'package:easy_ads_flutter/easy_ads_flutter.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import '../../core/base/base_controller.dart';
 import '../../helper/firebase_remote_config_service.dart';
@@ -9,6 +11,12 @@ class AdsFullController extends BaseController {
   @override
   void onInit() {
     super.onInit();
+    if (AdsService.isOrganic.value) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        closeAdFull();
+      });
+      return;
+    }
     showCloseButton();
   }
 

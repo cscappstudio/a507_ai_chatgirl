@@ -411,63 +411,6 @@ class ChatDetailPage extends GetView<ChatDetailController> {
           _buildPillButton("👗", "Outfits".tr, AppColors.surface, _showOutfitSheet),
           const SizedBox(width: 8),
           _buildPillButton("😋", "Actions".tr, AppColors.surface, _showActionSheet),
-          Expanded(child: const SizedBox(width: 12)),
-          Obx(() {
-            final gems = controller.profileController.currentUser.value?.gems ?? 0;
-            return Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: controller.onGemsCapsuleTap,
-                borderRadius: BorderRadius.circular(20),
-                child: Ink(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: AppColors.bgSecondary,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Image.asset('assets/png/gem.png',
-                              width: 22, height: 22),
-                          Positioned(
-                            right: -3,
-                            bottom: -2,
-                            child: Container(
-                              width: 11,
-                              height: 11,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                    color: AppColors.bgSecondary, width: 1),
-                              ),
-                              child: const Icon(Icons.add,
-                                  size: 7, color: AppColors.bgPrimary),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '$gems',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }),
         ],
       ),
     );
@@ -566,7 +509,7 @@ class ChatDetailPage extends GetView<ChatDetailController> {
                   return GestureDetector(
                     onTap: () {
                       Get.back();
-                      controller.handleOutfitSelection(outfit);
+                      controller.handleOutfitSelection(outfit, index: index);
                     },
                     child: Container(
                       decoration: BoxDecoration(
@@ -597,12 +540,15 @@ class ChatDetailPage extends GetView<ChatDetailController> {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  if (!isCustom) ...[
-                                    Image.asset('assets/png/gem.png', width: 12, height: 12),
+                                  if (isCustom)
+                                    Text("Custom".tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12))
+                                  else if (index == 0)
+                                    Text("Free".tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12))
+                                  else ...[
+                                    const Icon(Icons.play_circle_fill_rounded, color: Colors.white, size: 13),
                                     const SizedBox(width: 4),
-                                    Text(priceGems.toString(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-                                  ] else
-                                    Text("Custom".tr, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                                    Text("Ad".tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                                  ],
                                 ],
                               ),
                             ),
@@ -675,7 +621,7 @@ class ChatDetailPage extends GetView<ChatDetailController> {
                   return GestureDetector(
                     onTap: () {
                       Get.back();
-                      controller.handleActionSelection(action);
+                      controller.handleActionSelection(action, index: index);
                     },
                     child: Column(
                       children: [
@@ -689,14 +635,17 @@ class ChatDetailPage extends GetView<ChatDetailController> {
                         const SizedBox(height: 8),
                         Text(ActionLocalization.getLocalizedName(action['name']), style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis),
                         const SizedBox(height: 4),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Image.asset('assets/png/gem.png', width: 12, height: 12),
-                            const SizedBox(width: 4),
-                            Text("$priceGems", style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                          ],
-                        ),
+                        if (index == 0)
+                          Text("Free".tr, style: const TextStyle(color: AppColors.main, fontSize: 12, fontWeight: FontWeight.bold))
+                        else
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.play_circle_fill_rounded, color: AppColors.main, size: 13),
+                              const SizedBox(width: 4),
+                              Text("Ad".tr, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
                       ],
                     ),
                   );
@@ -715,25 +664,6 @@ class ChatDetailPage extends GetView<ChatDetailController> {
       color: Colors.transparent,
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () {
-              Get.toWithController(
-                controllerBuilder: () => PremiumController(),
-                page: () => const PremiumPage(),
-                routeName: AppRoutes.PREMIUM,
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child:
-                  const Icon(Icons.shopping_bag, color: Colors.white, size: 24),
-            ),
-          ),
-          const SizedBox(width: 12),
           Expanded(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),

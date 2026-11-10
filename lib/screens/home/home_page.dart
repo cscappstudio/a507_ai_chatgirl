@@ -30,10 +30,6 @@ class HomePage extends GetView<HomeController> {
     final floatingFabOffset = 20.0 + bottomInset;
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
-      floatingActionButton: Padding(
-        padding: EdgeInsets.only(bottom: floatingFabOffset),
-        child: _buildFAB(),
-      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: AppColors.backgroundGradient,
@@ -217,79 +213,7 @@ class HomePage extends GetView<HomeController> {
                     fit: BoxFit.contain,
                   ),
                 ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Obx(() {
-                      final profileCtrl = controller.profileController;
-                      final gems = profileCtrl.currentUser.value?.gems ?? 0;
-                      return GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: controller.onGemsCapsuleTap,
-                        child: Container(
-                          height: 40,
-                          padding: const EdgeInsets.only(left: 11, right: 6),
-                          decoration: BoxDecoration(
-                            gradient: AppColors.cardGradient,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: AppColors.borderActive.withValues(alpha: 0.65),
-                              width: 1.2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.neonShadow.withValues(alpha: 0.28),
-                                blurRadius: 12,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Image.asset(
-                                'assets/png/gem.png',
-                                width: 22,
-                                height: 22,
-                              ),
-                              const SizedBox(width: 7),
-                              Text(
-                                '$gems',
-                                style: const TextStyle(
-                                  color: AppColors.primaryText,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.2,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Container(
-                                width: 24,
-                                height: 24,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  gradient: AppColors.primaryButtonGradient,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.neonShadow.withValues(alpha: 0.45),
-                                      blurRadius: 6,
-                                    ),
-                                  ],
-                                ),
-                                child: const Icon(
-                                  Icons.add_rounded,
-                                  size: 16,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }),
-                  ],
-                ),
+                const SizedBox.shrink(),
               ],
             ),
           ),

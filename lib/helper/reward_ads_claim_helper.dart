@@ -12,26 +12,8 @@ import '../ads/const/ad_id_extension.dart';
 
 class RewardAdsClaimHelper {
   static Future<void> runClaimFlow({ApiRepository? apiRepository, VoidCallback? onWatchAdSuccess}) async {
-    int maxAdsToday = 5;
+    int maxAdsToday = 999999;
     int adsWatchedToday = AppSetting().getCountWatchAdReward() ?? 0;
-
-    if (Get.isRegistered<ProfileController>()) {
-      final profileCtrl = Get.find<ProfileController>();
-      final data = profileCtrl.checkinStatusData.value;
-      if (data != null) {
-        if (data['ads_max_per_day'] != null) {
-          maxAdsToday = (data['ads_max_per_day'] as num).toInt();
-        }
-        if (data['ads_claimed_today'] != null) {
-          adsWatchedToday = (data['ads_claimed_today'] as num).toInt();
-        }
-      }
-    }
-
-    if (adsWatchedToday >= maxAdsToday) {
-      AppUtil.showNormalToast("You have reached the maximum number of ads for today.".tr);
-      return;
-    }
 
     final api = apiRepository ?? ApiRepository();
     print("show rewarded ad");
@@ -41,9 +23,11 @@ class RewardAdsClaimHelper {
       adId: MyAdIdName.rewardedAd.getId,
       onShowed: () {
         print("Rewarded ad showed");
+        AppSetting.updateLastTimeShowAd();
       },
       adDissmissed: () async {
         print("rewarded ad finished, claim reward");
+        AppSetting.updateLastTimeShowAd();
         adsWatchedToday++;
         Constants.countWatchAdReward = adsWatchedToday;
         AppSetting().saveCountWatchAdReward();

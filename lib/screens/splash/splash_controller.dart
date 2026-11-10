@@ -336,20 +336,10 @@ class SplashController extends BaseController {
     setupAppPreferencesAndData();
 
     if (isSubsequentAppLaunch.value) {
-      final bool showIap = FirebaseRemoteConfigService.getBoolConfigByKey(
-          FirebaseRemoteConfigService.show_activity_iap);
-      if (showIap && !AppSetting.isPremiumUser.value) {
-        Get.offAllWithController(
-          controllerBuilder: () => PremiumController(),
-          page: () => const PremiumPage(),
-          arguments: {"isFromSplash": true},
-        );
-      } else {
-        Get.offAllNamed(
-          AppRoutes.HOME,
-          arguments: {"isFromSplash": true},
-        );
-      }
+      Get.offAllNamed(
+        AppRoutes.HOME,
+        arguments: {"isFromSplash": true},
+      );
     } else {
       Get.offAllWithController(
         controllerBuilder: () => LanguageController(),
@@ -522,9 +512,6 @@ class SplashController extends BaseController {
     try {
       await FirebaseRemoteConfigService.initFirebaseRemoteConfig();
       AppSetting.isInitRemoteConfig.value = true;
-      final remoteInterval = FirebaseRemoteConfigService.getIntConfigByKey(
-          FirebaseRemoteConfigService.interval_inter_ad);
-      AppSetting.interval_inter_ad = remoteInterval > 0 ? remoteInterval : 35;
     } catch (e) {
       AppUtil.showLogFull("error fetch remote config: $e");
     }

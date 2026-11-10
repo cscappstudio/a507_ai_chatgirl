@@ -77,25 +77,31 @@ class FullScreenImagePage extends GetView<FullScreenImageController> {
               ],
             ),
           ),
-          Align(
-            alignment: Alignment.bottomCenter,
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
             child: SafeArea(
               top: false,
-              minimum: const EdgeInsets.only(bottom: 8),
-              child: Obx(() {
-                if (AppSetting.isPremiumUser.value || AppSetting.isRemoveAds.value) {
-                  return const SizedBox.shrink();
-                }
-                if (!FirebaseRemoteConfigService.getBoolConfigByKey(
-                    FirebaseRemoteConfigService.banner_all)) {
-                  return const SizedBox.shrink();
-                }
-                return EasyBannerAd(
-                  adNetwork: AdNetwork.admob,
-                  adId: MyAdIdName.bannerAll.getId,
-                  isCollapsible: true,
-                );
-              }),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Obx(() {
+                    if (AppSetting.isPremiumUser.value || AppSetting.isRemoveAds.value) {
+                      return const SizedBox.shrink();
+                    }
+                    if (!FirebaseRemoteConfigService.getBoolConfigByKey(
+                        FirebaseRemoteConfigService.banner_all)) {
+                      return const SizedBox.shrink();
+                    }
+                    return EasyBannerAd(
+                      adNetwork: AdNetwork.admob,
+                      adId: MyAdIdName.bannerAll.getId,
+                      isCollapsible: true,
+                    );
+                  }),
+                ],
+              ),
             ),
           ),
         ],

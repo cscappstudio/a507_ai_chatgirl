@@ -196,13 +196,13 @@ class OnboardController extends BaseController {
           });
         }
       } else if (event.adUnitId == MyAdIdName.nativeOnboardFull1Ad.getId) {
-        if (event.type == AdEventType.adLoaded) {
+        if (event.type == AdEventType.adLoaded && !AdsService.isOrganic.value) {
           canRenderFullScreenAd1.value = true;
           isDisplayingFullScreenAd1.value = true;
           update();
         }
       } else if (event.adUnitId == MyAdIdName.nativeOnboardFull2Ad.getId) {
-        if (event.type == AdEventType.adLoaded) {
+        if (event.type == AdEventType.adLoaded && !AdsService.isOrganic.value) {
           canRenderFullScreenAd2.value = true;
           isDisplayingFullScreenAd2.value = true;
           update();
@@ -223,8 +223,8 @@ class OnboardController extends BaseController {
 
     // Intro 1
     steps.add(OnboardStep(
-      title: "Discover Your AI Soulmate".tr,
-      desc: "Find your ideal match and stay connected with someone who is always there for you".tr,
+      title: "Meet Your Dream Love".tr,
+      desc: "Find the one who makes your heart skip a beat".tr,
       image: "assets/png/onboard1.webp",
       adId: showAd1 ? MyAdIdName.nativeOnboard1Ad.getId : "",
       factoryId: showAd1 ? "nativeMedia" : "",
@@ -243,16 +243,16 @@ class OnboardController extends BaseController {
 
     // Intro 2
     steps.add(OnboardStep(
-      title: "Share Your Deepest Thoughts".tr,
-      desc: "Experience endless, private chats with a partner who truly gets you".tr,
+      title: "Sweet Words, Sweet Feelings".tr,
+      desc: "Enjoy cute conversations filled with love and affection".tr,
       image: "assets/png/onboard2.webp",
       fit: BoxFit.cover,
     ));
 
     // Intro 3
     steps.add(OnboardStep(
-      title: "Design Your Dream Partner".tr,
-      desc: "Tailor her personality, looks, and energy to perfectly match your desires".tr,
+      title: "Let Love Bloom".tr,
+      desc: "Turn every little chat into a beautiful connection.".tr,
       image: "assets/png/onboard3.webp",
       fit: BoxFit.cover,
     ));
@@ -269,8 +269,8 @@ class OnboardController extends BaseController {
 
     // Intro 4
     steps.add(OnboardStep(
-      title: "She is Waiting for You".tr,
-      desc: "Jump in, say hello, and spark a meaningful connection today".tr,
+      title: "Your Love, Your Story".tr,
+      desc: "Create unforgettable moments with your AI companion".tr,
       image: "assets/png/onboard4.webp",
       adId: showAd3 ? MyAdIdName.nativeOnboard3Ad.getId : "",
       factoryId: showAd3 ? "nativeMedia" : "",
@@ -356,31 +356,21 @@ class OnboardController extends BaseController {
   void onChangePage(int value) => handleSlideTransition(value);
 
   Future<void> _proceedToAppExperience() async {
-    final bool showIap = FirebaseRemoteConfigService.getBoolConfigByKey(
-        FirebaseRemoteConfigService.show_activity_iap);
     final bool isOrganic = await AdsService.isOrganicAsync();
 
-    if (showIap && !AppSetting.isPremiumUser.value) {
-      if (!isOrganic &&
-          FirebaseRemoteConfigService.getBoolConfigByKey(
-              FirebaseRemoteConfigService.native_full_click)) {
-        Get.toWithController(
-          controllerBuilder: () => AdsFullController(),
-          page: () => AdsFullPage(),
-        ).then((_) {
-          Get.offAllWithController(
-            controllerBuilder: () => Premium2Controller(),
-            arguments: {"isFromSplash": true},
-            page: () => Premium2Page(),
-          );
-        });
-      } else {
-        Get.offAllWithController(
-          controllerBuilder: () => Premium2Controller(),
+    if (!isOrganic &&
+        FirebaseRemoteConfigService.getBoolConfigByKey(
+            FirebaseRemoteConfigService.native_full_click) &&
+        !AppSetting.isPremiumUser.value) {
+      Get.toWithController(
+        controllerBuilder: () => AdsFullController(),
+        page: () => AdsFullPage(),
+      )?.then((_) {
+        Get.offAllNamed(
+          AppRoutes.HOME,
           arguments: {"isFromSplash": true},
-          page: () => Premium2Page(),
         );
-      }
+      });
     } else {
       Get.offAllNamed(
         AppRoutes.HOME,

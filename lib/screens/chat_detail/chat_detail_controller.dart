@@ -12,6 +12,7 @@ import '../../api_rest/api_repository.dart';
 import 'package:realm/realm.dart';
 import '../../models/db/chat_model.dart';
 import '../../core/utils/app_util.dart';
+import '../../utils/app_setting.dart';
 import '../../routes/app_pages.dart';
 import '../premium/premium_controller.dart';
 import '../premium/premium_page.dart';
@@ -94,6 +95,10 @@ class ChatDetailController extends BaseController {
   final outfits = <dynamic>[].obs;
   final actions = <dynamic>[].obs;
 
+  static const String _keyHasInitFreeChatTurns = 'has_init_free_chat_turns';
+  static const String _keyRemainingChatTurns = 'remaining_chat_turns';
+  final remainingChatTurns = 3.obs;
+
   final isLoading = false.obs;
   final textController = TextEditingController();
   final scrollController = ScrollController();
@@ -105,6 +110,7 @@ class ChatDetailController extends BaseController {
   @override
   void onInit() {
     super.onInit();
+    _initChatTurns();
 
     focusNode.addListener(() {
       if (focusNode.hasFocus) {
@@ -136,13 +142,7 @@ class ChatDetailController extends BaseController {
 
 
 
-  void onGemsCapsuleTap() {
-    Get.toWithController(
-      controllerBuilder: () => PremiumController(),
-      page: () => const PremiumPage(),
-      routeName: AppRoutes.PREMIUM,
-    );
-  }
+  void onGemsCapsuleTap() {}
 
   void _initSession() {
     try {
@@ -314,174 +314,123 @@ class ChatDetailController extends BaseController {
     });
   }
 
-  Future<void> handleOutfitSelection(dynamic outfit) async {
-    final priceObj = outfit['price_gems'];
-    final int priceGems = (priceObj is int) ? priceObj : 0;
-
-    // Validate Gems if profile is registered
-    if (Get.isRegistered<ProfileController>()) {
-      final profileCtrl = Get.find<ProfileController>();
-      final currentGems = profileCtrl.currentUser.value?.gems ?? 0;
-      if (currentGems < priceGems) {
-        AppUtil.showNormalToast('You need'.tr + '$priceGems' + '💎 to use this outfit.'.tr);
-        return;
-      }
-
-      // Proceed API Call
-      AppUtil.showNormalToast("Applying outfit...".tr);
-      final outfitId = outfit['id']?.toString() ?? outfit['_id']?.toString() ?? '';
-      if (outfitId.isEmpty) return;
-
-      final res = await ApiRepository().useOutfitWeifu(outfitId);
-      bool isReviewerEnabled = FirebaseRemoteConfigService.getBoolConfigByKey(
-        FirebaseRemoteConfigService.enable_reviewer_add_gems,
+  Future<void> handleOutfitSelection(dynamic outfit, {int index = 0}) async {
+    if (index == 0) {
+      await _applyOutfit(outfit);
+    } else {
+      AppSetting.showRewardToUnlock(
+        Get.context!,
+        onUnlocked: () {
+          _applyOutfit(outfit);
+        },
       );
+    }
+  }
 
-      final isSuccess = (res != null && res['success'] == true) || isReviewerEnabled;
+  Future<void> _applyOutfit(dynamic outfit) async {
+    AppUtil.showNormalToast("Applying outfit...".tr);
+    final outfitId = outfit['id']?.toString() ?? outfit['_id']?.toString() ?? '';
 
-      if (isSuccess) {
-        // Update user remaining gems locally
-        profileCtrl.currentUser.update((val) {
-          if (val != null) {
-            val.gems = isReviewerEnabled
-                ? ((val.gems ?? 0) - priceGems).clamp(0, 9999999)
-                : (res?['remaining_gems'] ?? val.gems);
+    if (outfitId.isNotEmpty) {
+      ApiRepository().useOutfitWeifu(outfitId).then((_) {
+        reloadGemsAfterSuccessAction();
+      });
+    }
+
+    // Show random result image
+    final List<dynamic> images = outfit['result_urls'] ?? [];
+    String imageUrl = outfit['thumbnail_icon'] ?? '';
+
+    if (images.isNotEmpty) {
+      final randomInt = Random().nextInt(images.length);
+      imageUrl = images[randomInt].toString();
+    }
+
+    if (imageUrl.isNotEmpty) {
+      final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+      final botMsg = ChatMessage(timestamp, characterId, "assistant", "![Outfit Image]($imageUrl)", DateTime.now());
+      try {
+        realm.write(() {
+          realm.add(botMsg);
+          var session = realm.find<ChatSession>(characterId);
+          if (session != null) {
+            session.lastMessage = "Sent an image".tr;
+            session.lastActiveTime = DateTime.now();
           }
         });
-
-        // Show random result image
-        final List<dynamic> images = outfit['result_urls'] ?? [];
-        String imageUrl = outfit['thumbnail_icon'] ?? '';
-
-        if (images.isNotEmpty) {
-          final randomInt = Random().nextInt(images.length);
-          imageUrl = images[randomInt].toString();
-        }
-
-        if (imageUrl.isNotEmpty) {
-          // Send image into chat locally
-          final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
-
-          // "assistant" role to ensure it shows up on the left side
-          final botMsg = ChatMessage(timestamp, characterId, "assistant", "![Outfit Image]($imageUrl)", DateTime.now());
-          try {
-            realm.write(() {
-              realm.add(botMsg);
-              var session = realm.find<ChatSession>(characterId);
-              if (session != null) {
-                session.lastMessage = "Sent an image".tr;
-                session.lastActiveTime = DateTime.now();
-              }
-            });
-            loadMessages();
-          } catch (e) {
-            AppUtil.showLog("Realm error injecting outfit image: $e");
-          }
-        }
-
-        //reload gems
-        reloadGemsAfterSuccessAction();
-      } else {
-        AppUtil.showNormalToast(res?['message'] ?? "Could not apply outfit.".tr);
+        loadMessages();
+      } catch (e) {
+        AppUtil.showLog("Realm error injecting outfit image: $e");
       }
     }
   }
 
-  Future<void> handleActionSelection(dynamic action) async {
-    final priceObj = action['price_gems'];
-    final int priceGems = (priceObj is int) ? priceObj : 0;
-
-    // Validate Gems if profile is registered
-    if (Get.isRegistered<ProfileController>()) {
-      final profileCtrl = Get.find<ProfileController>();
-      final currentGems = profileCtrl.currentUser.value?.gems ?? 0;
-      if (currentGems < priceGems) {
-        AppUtil.showNormalToast("You need".tr + "$priceGems" + "💎 to use this action.".tr);
-        return;
-      }
-
-      // Proceed API Call
-      AppUtil.showNormalToast("Applying action...".tr);
-      final actionId = action['id']?.toString() ?? action['_id']?.toString() ?? '';
-      if (actionId.isEmpty) return;
-
-      final res = await ApiRepository().useActionWeifu(actionId);
-      bool isReviewerEnabled = FirebaseRemoteConfigService.getBoolConfigByKey(
-        FirebaseRemoteConfigService.enable_reviewer_add_gems,
+  Future<void> handleActionSelection(dynamic action, {int index = 0}) async {
+    if (index == 0) {
+      await _applyAction(action);
+    } else {
+      AppSetting.showRewardToUnlock(
+        Get.context!,
+        onUnlocked: () {
+          _applyAction(action);
+        },
       );
+    }
+  }
 
-      final isSuccess = (res != null && res['success'] == true) || isReviewerEnabled;
+  Future<void> _applyAction(dynamic action) async {
+    AppUtil.showNormalToast("Applying action...".tr);
+    final actionId = action['id']?.toString() ?? action['_id']?.toString() ?? '';
 
-      if (isSuccess) {
-        // Update user remaining gems locally
-        profileCtrl.currentUser.update((val) {
-          if (val != null) {
-            val.gems = isReviewerEnabled
-                ? ((val.gems ?? 0) - priceGems).clamp(0, 9999999)
-                : (res?['remaining_gems'] ?? val.gems);
+    if (actionId.isNotEmpty) {
+      ApiRepository().useActionWeifu(actionId).then((_) {
+        reloadGemsAfterSuccessAction();
+      });
+    }
+
+    // Show random result image
+    final List<dynamic> images = action['result_urls'] ?? [];
+    String imageUrl = action['icon_url'] ?? '';
+
+    if (images.isNotEmpty) {
+      final randomInt = Random().nextInt(images.length);
+      imageUrl = images[randomInt].toString();
+    }
+
+    if (imageUrl.isNotEmpty) {
+      final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+      final botMsg = ChatMessage(timestamp, characterId, "assistant", "![Action Image]($imageUrl)", DateTime.now());
+      try {
+        realm.write(() {
+          realm.add(botMsg);
+          var session = realm.find<ChatSession>(characterId);
+          if (session != null) {
+            session.lastMessage = "Sent an action image".tr;
+            session.lastActiveTime = DateTime.now();
           }
         });
-
-        // Show random result image
-        final List<dynamic> images = action['result_urls'] ?? [];
-        String imageUrl = action['icon_url'] ?? ''; // fallback
-
-        if (images.isNotEmpty) {
-          final randomInt = Random().nextInt(images.length);
-          imageUrl = images[randomInt].toString();
-        }
-
-        if (imageUrl.isNotEmpty) {
-          // Send image into chat locally
-          final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
-
-          // "assistant" role to ensure it shows up on the left side
-          final botMsg = ChatMessage(timestamp, characterId, "assistant", "![Action Image]($imageUrl)", DateTime.now());
-          try {
-            realm.write(() {
-              realm.add(botMsg);
-              var session = realm.find<ChatSession>(characterId);
-              if (session != null) {
-                session.lastMessage = "Sent an action image".tr;
-                session.lastActiveTime = DateTime.now();
-              }
-            });
-            loadMessages();
-          } catch (e) {
-            AppUtil.showLog("Realm error injecting action image: $e");
-          }
-        }
-
-        //reload gems
-        reloadGemsAfterSuccessAction();
-      } else {
-        AppUtil.showNormalToast(res?['message'] ?? "Could not apply action.".tr);
+        loadMessages();
+      } catch (e) {
+        AppUtil.showLog("Realm error injecting action image: $e");
       }
     }
   }
 
   reloadGemsAfterSuccessAction() async {
-    bool isReviewerEnabled = FirebaseRemoteConfigService.getBoolConfigByKey(
-      FirebaseRemoteConfigService.enable_reviewer_add_gems,
-    );
-    if (isReviewerEnabled) {
-      final currentGems = profileController.currentUser.value?.gems ?? 0;
-      if (currentGems > 0) {
-        profileController.currentUser.value?.gems = currentGems - 1;
-        profileController.currentUser.refresh();
-      }
-      return;
-    }
-
     try {
       await profileController.fetchProfile();
-      final currentGems = profileController.currentUser.value?.gems ?? 0;
-
-      AppUtil.showLogFull("sendChatMessageWeifu currentGems: $currentGems");
-      if (currentGems == 0) {
-        AppUtil.showToastError('You just used your last gem.');
-      }
     } catch (e) {}
+  }
+
+  void _initChatTurns() {
+    final bool hasInit = AppUtil.getBool(_keyHasInitFreeChatTurns);
+    if (!hasInit) {
+      AppUtil.saveBool(_keyHasInitFreeChatTurns, true);
+      AppUtil.saveInt(_keyRemainingChatTurns, 3);
+      remainingChatTurns.value = 3;
+    } else {
+      remainingChatTurns.value = AppUtil.getInt(_keyRemainingChatTurns);
+    }
   }
 
   void _showOutOfGemsPopup() {
@@ -489,17 +438,10 @@ class ChatDetailController extends BaseController {
       GetBuilder<PopupOutOfGemsController>(
         init: PopupOutOfGemsController(
           onWatchAdSuccess: () async {
-            if (Get.isRegistered<ProfileController>()) {
-              await Get.find<ProfileController>().fetchProfile();
-              update();
-            }
-          },
-          onGoPremium: () {
-            Get.toWithController(
-              controllerBuilder: () => PremiumController(),
-              page: () => const PremiumPage(),
-              routeName: AppRoutes.PREMIUM,
-            );
+            final int updatedTurns = AppUtil.getInt(_keyRemainingChatTurns) + 8;
+            AppUtil.saveInt(_keyRemainingChatTurns, updatedTurns);
+            remainingChatTurns.value = updatedTurns;
+            await sendMessage();
           },
         ),
         builder: (_) => const PopupOutOfGemsPage(),
@@ -513,10 +455,16 @@ class ChatDetailController extends BaseController {
     final text = textController.text.trim();
     if (text.isEmpty) return;
 
-    final currentGems = profileController.currentUser.value?.gems ?? 0;
-    if (currentGems == 0) {
-      _showOutOfGemsPopup();
-      return;
+    if (!AppSetting.isPremiumUser.value && !AppSetting.isRemoveAds.value) {
+      final int currentTurns = AppUtil.getInt(_keyRemainingChatTurns);
+      remainingChatTurns.value = currentTurns;
+      if (currentTurns <= 0) {
+        _showOutOfGemsPopup();
+        return;
+      }
+      final int nextTurns = currentTurns - 1;
+      AppUtil.saveInt(_keyRemainingChatTurns, nextTurns);
+      remainingChatTurns.value = nextTurns;
     }
 
     textController.clear();
