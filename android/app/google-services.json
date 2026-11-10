@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "170418496356",
+    "project_id": "a507---ai-character-chat-v4",
+    "storage_bucket": "a507---ai-character-chat-v4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:170418496356:android:60e2494a60af0cb13a9071",
+        "android_client_info": {
+          "package_name": "com.aichat.aidreamgirl.lovechat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCoHk_SjQf1Tv9Ee_Dq8ne6Z7GZu7fqcDw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
