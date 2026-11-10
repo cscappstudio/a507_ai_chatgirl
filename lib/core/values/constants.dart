@@ -5,8 +5,8 @@ import 'package:get/get.dart';
 class Constants {
   static var screenWidth = WidgetsBinding.instance.window.physicalSize.width;
   static var screenHeight = window.physicalSize.height;
-  static var privacy = "https://sites.google.com/view/noobgame-studio";
-  static var termOfUser = "https://sites.google.com/view/noobgame-studio";
+  static var privacy = "https://docs.google.com/document/d/1JUD-uBWf7Nd-aGjyydJVwrg4nJOwW5XT";
+  static var termOfUser = "https://docs.google.com/document/d/1JUD-uBWf7Nd-aGjyydJVwrg4nJOwW5XT";
   static int timeReloadNativeAd = 15;
 
   static String adjustToken = '7co8mn3avq0w';

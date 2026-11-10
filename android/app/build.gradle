@@ -65,10 +65,10 @@ android {
 
     signingConfigs {
         release {
-            storeFile file('../../keystore/noobgamestudio.jks')
-            storePassword "noobgamestudio"
-            keyAlias "noobgamestudio"
-            keyPassword "noobgamestudio"
+            storeFile file('../../keystore/raptorstudio.jks')
+            storePassword "raptorstudio"
+            keyAlias "raptorstudio"
+            keyPassword "raptorstudio"
         }
     }
     buildTypes {
