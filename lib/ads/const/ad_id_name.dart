@@ -10,7 +10,7 @@ class MyAdIdName {
     final isProd = BuildConfig.instance.environment == Environment.PRODUCTION;
     if (isProd) {
       if (Platform.isAndroid) {
-        return "ca-app-pub-9900730300733887~3917983027";
+        return "ca-app-pub-9900730300733887~1993055083";
       } else {
         return "ca-app-pub-3940256099942544/5575463023";
       }
