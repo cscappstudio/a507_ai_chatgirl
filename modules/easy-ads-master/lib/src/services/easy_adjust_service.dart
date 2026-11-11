@@ -25,6 +25,7 @@ class EasyAdjustService {
           attributionChangedData.network!.isNotEmpty) {
         bool isOrganic =
             attributionChangedData.network!.toLowerCase().contains('organic');
+        AdsService.setIsOrganic(isOrganic);
         onOrganicChanged?.call(isOrganic);
       }
       if (attributionChangedData.trackerToken != null) {
@@ -182,6 +183,7 @@ class EasyAdjustService {
         AdjustHelper.saveAttributionNetwork(attribution.network);
         bool isOrganic =
             attribution.network!.toLowerCase().contains('organic');
+        AdsService.setIsOrganic(isOrganic);
         onOrganicChanged?.call(isOrganic);
       }
     });

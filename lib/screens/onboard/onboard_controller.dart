@@ -79,6 +79,15 @@ class OnboardController extends BaseController {
   @override
   void onInit() {
     super.onInit();
+    ever<bool>(AdsService.isOrganic, (isOrganic) {
+      if (isOrganic && !isClosed) {
+        canRenderFullScreenAd1.value = false;
+        canRenderFullScreenAd2.value = false;
+        isDisplayingFullScreenAd1.value = false;
+        isDisplayingFullScreenAd2.value = false;
+        update();
+      }
+    });
     initializeOnboardingAds();
     FirebaseHelper.setTrackingScreenName("OnboardScreen");
   }
@@ -148,9 +157,11 @@ class OnboardController extends BaseController {
         final originalLoaded = fullScreenAdInstance1?.onAdLoaded;
         fullScreenAdInstance1?.onAdLoaded = (adNetwork, adUnitType, data) {
           originalLoaded?.call(adNetwork, adUnitType, data);
-          canRenderFullScreenAd1.value = true;
-          isDisplayingFullScreenAd1.value = true;
-          update();
+          if (!AdsService.isOrganic.value) {
+            canRenderFullScreenAd1.value = true;
+            isDisplayingFullScreenAd1.value = true;
+            update();
+          }
         };
         fullScreenAdInstance1?.load();
       }
@@ -164,9 +175,11 @@ class OnboardController extends BaseController {
         final originalLoaded = fullScreenAdInstance2?.onAdLoaded;
         fullScreenAdInstance2?.onAdLoaded = (adNetwork, adUnitType, data) {
           originalLoaded?.call(adNetwork, adUnitType, data);
-          canRenderFullScreenAd2.value = true;
-          isDisplayingFullScreenAd2.value = true;
-          update();
+          if (!AdsService.isOrganic.value) {
+            canRenderFullScreenAd2.value = true;
+            isDisplayingFullScreenAd2.value = true;
+            update();
+          }
         };
         fullScreenAdInstance2?.load();
       }

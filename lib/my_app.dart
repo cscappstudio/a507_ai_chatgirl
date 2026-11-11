@@ -50,6 +50,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     configLoading();
+    AdsService.initOrganic();
     AppSetting.initAppSetting();
     initCommonSDK();
     Future.delayed(const Duration(seconds: 5), () {
@@ -105,7 +106,10 @@ class _MyAppState extends State<MyApp> {
             ? AdjustEnvironment.sandbox
             : AdjustEnvironment.production);
 
-    await EasyAds.instance.initAdjust(config);
+    await EasyAds.instance.initAdjust(
+      config,
+      onOrganicChanged: (isOrganic) => AdsService.setIsOrganic(isOrganic),
+    );
   }
 
   @override

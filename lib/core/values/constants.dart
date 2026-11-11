@@ -78,6 +78,7 @@ class Constants {
   static const kFirstTimeOpenApp = 'isFirstTimeOpenApp';
 
   static const String kUserLanguage = 'kUserLanguage';
+  static const String kUserLanguageVariant = 'kUserLanguageVariant';
 
   static String imagedefault = "assets/image_default.png";
   static String imageLoading = "assets/image_default.png";

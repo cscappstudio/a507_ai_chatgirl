@@ -17,6 +17,11 @@ class AdsFullController extends BaseController {
       });
       return;
     }
+    ever<bool>(AdsService.isOrganic, (isOrganic) {
+      if (isOrganic && !isClosed) {
+        closeAdFull();
+      }
+    });
     showCloseButton();
   }
 

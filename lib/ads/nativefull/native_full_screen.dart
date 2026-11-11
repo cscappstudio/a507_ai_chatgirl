@@ -28,6 +28,7 @@ class _NativeFullScreenState extends State<NativeFullScreen>
   int _secondsLeft = 2;
   Timer? _timer;
   Timer? _autoNavigateTimer;
+  Worker? _organicWorker;
   bool _navigated = false;
   bool _showCloseButton = false;
   bool _shouldNavigateOnResume = false;
@@ -45,6 +46,11 @@ class _NativeFullScreenState extends State<NativeFullScreen>
     }
     EasyAds.instance.appLifecycleReactor?.setOnSplashScreen(true);
     WidgetsBinding.instance.addObserver(this);
+    _organicWorker = ever<bool>(AdsService.isOrganic, (isOrganic) {
+      if (isOrganic && mounted && !_navigated) {
+        _handleNavigate();
+      }
+    });
 
     // Fallback: nếu sau 10s chưa navigate thì tự động navigate
     Future.delayed(const Duration(seconds: 10), () {
@@ -58,6 +64,7 @@ class _NativeFullScreenState extends State<NativeFullScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _organicWorker?.dispose();
     _timer?.cancel();
     _autoNavigateTimer?.cancel();
     EasyAds.instance.appLifecycleReactor?.setOnSplashScreen(false);

@@ -5,6 +5,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import '../src/services/ads_service.dart';
 
 class AdjustHelper {
   static FirebaseAnalytics analytics = FirebaseAnalytics.instance;
@@ -34,6 +35,7 @@ class AdjustHelper {
     }
 
     bool isOrganicUser = network.toLowerCase().contains('organic');
+    await AdsService.setIsOrganic(isOrganicUser);
     print('👉 Is Organic User: $isOrganicUser');
     print('====================================================');
   }

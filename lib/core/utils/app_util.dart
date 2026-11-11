@@ -83,6 +83,24 @@ class AppUtil {
     }
   }
 
+  String getUserChoosedLanguageVariant() {
+    String strResult = '';
+    try {
+      strResult = getString(Constants.kUserLanguageVariant);
+    } catch (e) {
+      AppUtil.showLog("getUserChoosedLanguageVariant Error: " + e.toString());
+    }
+    return strResult;
+  }
+
+  saveUserChoosedLanguageVariant(String variantId) {
+    try {
+      saveString(Constants.kUserLanguageVariant, variantId);
+    } catch (e) {
+      AppUtil.showLog("saveUserChoosedLanguageVariant Error: " + e.toString());
+    }
+  }
+
   Future<String> getAppVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     String version = packageInfo.version;
